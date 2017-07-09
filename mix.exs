@@ -35,7 +35,12 @@ defmodule NervesTestServer.Mixfile do
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.11"},
-     {:cowboy, "~> 1.0"}]
+     {:cowboy, "~> 1.0"},
+     {:ex_aws, "~> 1.0"},
+     {:poison, "~> 2.0"},
+     {:hackney, "~> 1.6"},
+     {:sweet_xml, "~> 0.6.5"},
+     {:gen_stage, "~> 0.12"}]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

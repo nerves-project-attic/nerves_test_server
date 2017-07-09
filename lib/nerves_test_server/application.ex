@@ -1,6 +1,8 @@
 defmodule NervesTestServer.Application do
   use Application
 
+  @queue "nerves-test-server"
+
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
@@ -14,6 +16,9 @@ defmodule NervesTestServer.Application do
       supervisor(NervesTestServer.Web.Endpoint, []),
       # Start your own worker by calling: NervesTestServer.Worker.start_link(arg1, arg2, arg3)
       # worker(NervesTestServer.Worker, [arg1, arg2, arg3]),
+      worker(NervesTestServer.SQSProducer, [@queue, [name: :sqs_producer]]),
+      #worker(NervesTestServer.SQSDecoder, [[name: :sqs_decoder]]),
+      worker(NervesTestServer.Device, ["rpi0", @queue, [:sqs_producer]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

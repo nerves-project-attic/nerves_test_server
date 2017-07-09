@@ -18,7 +18,7 @@ defmodule NervesTestServer.Application do
       # worker(NervesTestServer.Worker, [arg1, arg2, arg3]),
       worker(NervesTestServer.SQSProducer, [@queue, [name: :sqs_producer]]),
       #worker(NervesTestServer.SQSDecoder, [[name: :sqs_decoder]]),
-      worker(NervesTestServer.Device, ["rpi0", @queue, [:sqs_producer]])
+      #worker(NervesTestServer.Device, ["rpi0", @queue, [:sqs_producer]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

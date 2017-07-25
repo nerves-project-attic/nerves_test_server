@@ -1,29 +1,52 @@
 defmodule NervesTestServer.Web.DeviceChannel do
   use NervesTestServer.Web, :channel
+  require Logger
+  alias NervesTestServer.Device
 
-  def join("device:" <> _hostname, payload, socket) do
-    if authorized?(payload) do
-      {:ok, socket}
+  def join("device:" <> device, %{"target" => target}, socket) do
+    Logger.debug "Device #{device} Joined"
+    #Logger.debug "Params: #{inspect payload}"
+    connect(device, "device:" <> device, target)
+    socket =
+      assign(socket, :device, device)
+    {:ok, socket}
+  end
+
+  def handle_in("test_results", payload, socket) do
+    Logger.debug "#{socket.assigns[:device]} Received Results: #{inspect payload}"
+    result(socket.assigns[:device], payload) |> IO.inspect
+    {:reply, {:ok, %{status: "results_received"}}, socket}
+  end
+
+  def connect(device, topic, target) do
+    pidname = pname(device)
+    if pid = Process.whereis(pidname) do
+      {:ok, pid}
     else
-      {:error, %{reason: "unauthorized"}}
+      NervesTestServer.Device.start_link(device, topic, target, [name: pidname])
     end
   end
 
-  # Channels can be used in a request/response fashion
-  # by sending replies to requests from the client
-  def handle_in("ping", payload, socket) do
-    {:reply, {:ok, payload}, socket}
+  def remove(device) do
+    pidname = pname(device)
+    if Process.whereis(pidname) do
+      Process.exit(pidname, :normal)
+    else
+      {:error, :not_started}
+    end
   end
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (device:lobby).
-  def handle_in("shout", payload, socket) do
-    broadcast socket, "shout", payload
-    {:noreply, socket}
+  def result(device, result) do
+    pidname = pname(device)
+    if pid = Process.whereis(pidname) do
+      Device.result(pid, result)
+    else
+      {:error, :not_started}
+    end
   end
 
-  # Add authorization logic here as required.
-  defp authorized?(_payload) do
-    true
+  defp pname(device) do
+    String.to_atom("NervesTestServer.Device." <> device)
   end
+
 end

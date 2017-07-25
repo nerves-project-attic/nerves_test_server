@@ -24,7 +24,7 @@ defmodule NervesTestServer.SQSProducer do
   end
   def handle_demand(incoming_demand, state) do
     new_demand = state.demand + incoming_demand
-
+    
     {:noreply, [], %{state| demand: new_demand}}
   end
 

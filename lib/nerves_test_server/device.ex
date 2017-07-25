@@ -4,20 +4,27 @@ defmodule NervesTestServer.Device do
   require Logger
   alias ExAws.SQS
 
-  def start_link(target, queue_name, producers, opts \\ []) do
-    GenStage.start_link(__MODULE__, [target: target, queue: queue_name, producers: producers], opts)
+  @queue "nerves-test-server"
+  @producers [NervesTestServer.SQSProducer]
+
+  def start_link(device, target, topic, opts \\ []) do
+    Logger.debug "Start Device: #{inspect device}"
+    GenStage.start_link(__MODULE__, {device, target, topic, self()}, opts) |> IO.inspect
   end
 
-  def init(opts) do
-    queue = opts[:queue]
-    producers = opts[:producers]
-    target = opts[:target]
-    topic = opts[:topic]
+  def result(pid, result) do
+    GenStage.call(pid, {:result, result})
+  end
 
+  def init({device, target, topic, socket}) do
+    producers = @producers
+    Process.unlink(socket)
     state = %{
-      queue: queue,
+      device: device,
+      queue: @queue,
       target: target,
-      topic: topic
+      topic: topic,
+      message: nil
     }
 
     subscriptions = Enum.map(producers, &({&1, [
@@ -40,19 +47,27 @@ defmodule NervesTestServer.Device do
     {:consumer, state, subscribe_to: subscriptions}
   end
 
-  def handle_events(messages, _from, state) do
-    handle_messages(messages, state)
-    {:noreply, [], state}
+  def handle_call({:result, result}, _from, s) do
+    # TODO: Persist the results to the DB
+    Logger.debug "Device Received Results: #{inspect result}"
+    {:reply, :ok, [], delete_message(s)}
   end
 
-  defp handle_messages(messages, state) do
-    ## You probably want to handle errors or issues by NOT deleting
-    ## those messages, but this is fine for our example
-    Enum.each(messages, &process_message/1)
+  def handle_events(message, _from, s) do
+    handle_message(message, s)
+    {:noreply, [], %{s | message: message}}
+  end
 
-    state.queue
-    |> SQS.delete_message_batch(Enum.map(messages, &make_batch_item/1))
+  defp handle_message(message, state) do
+    process_message(message)
+  end
+
+  defp delete_message(%{message: nil} = s), do: s
+  defp delete_message(%{message: message} = s) do
+    s.queue
+    |> SQS.delete_message_batch(make_batch_item(message))
     |> ExAws.request
+    %{s | message: nil}
   end
 
   defp make_batch_item(message) do
@@ -73,6 +88,11 @@ defmodule NervesTestServer.Device do
         nil -> :noop
         key ->
           IO.inspect key, label: "Key"
+          # TODO: Publish to the device to tell it to load the new fw
+          # TODO: Start a timer to wait for the device.
+          #  If the timer expires, kill the process.
+          #  Ack the message when the timer expires.
+          #  Save a record that the fw was bad
       end
     end)
     {:ok, message}

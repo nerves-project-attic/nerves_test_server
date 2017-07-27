@@ -6,11 +6,12 @@ defmodule NervesTestServer.Build do
 
   schema "builds" do
     field :end_time, :utc_datetime
-    field :node, :string
+    field :device, :string
     field :result, :map
     field :result_io, :string
     field :start_time, :utc_datetime
-    field :target, :string
+    field :org, :string
+    field :system, :string
     field :vcs_id, :string
 
     timestamps()
@@ -19,8 +20,8 @@ defmodule NervesTestServer.Build do
   @doc false
   def changeset(%Build{} = build, attrs) do
     build
-    |> cast(attrs, [:vcs_id, :target, :result, :result_io, :node, :start_time, :end_time])
-    |> validate_required([:vcs_id, :target, :result, :result_io, :node, :start_time, :end_time])
+    |> cast(attrs, [:vcs_id, :org, :system, :result, :result_io, :device, :start_time, :end_time])
+    |> validate_required([:vcs_id, :org, :system])
     |> unique_constraint(:vcs_id)
   end
 end

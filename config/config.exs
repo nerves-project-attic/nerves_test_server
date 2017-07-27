@@ -11,7 +11,7 @@ config :nerves_test_server,
 
 # Configures the endpoint
 config :nerves_test_server, NervesTestServer.Web.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "169.254.37.89"],
   secret_key_base: "38LtmKGJZBrYawg1qVj6dhQt6yCu2IsMOCy1pFp3XQiGFUBOXSOAUB5lqKeFmzAv",
   render_errors: [view: NervesTestServer.Web.ErrorView, accepts: ~w(html json)],
   pubsub: [name: NervesTestServer.PubSub,

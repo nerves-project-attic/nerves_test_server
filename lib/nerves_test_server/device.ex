@@ -3,45 +3,39 @@ defmodule NervesTestServer.Device do
 
   require Logger
   alias ExAws.SQS
+  alias NervesTestServer.Web.Endpoint
+  alias NervesTestServer.{Repo, Build}
 
   @queue "nerves-test-server"
+  @prefix "test_server"
+  @org "nerves-project"
   @producers [NervesTestServer.SQSProducer]
+  @timeout 60_000 * 9 # 9 minutes
 
-  def start_link(device, target, topic, opts \\ []) do
-    Logger.debug "Start Device: #{inspect device}"
-    GenStage.start_link(__MODULE__, {device, target, topic, self()}, opts) |> IO.inspect
+  def start_link(device, system, topic, opts \\ []) do
+    GenStage.start_link(__MODULE__, {device, system, topic, self()}, opts) |> IO.inspect
   end
 
   def result(pid, result) do
     GenStage.call(pid, {:result, result})
   end
 
-  def init({device, target, topic, socket}) do
+  def init({device, system, topic, socket}) do
     producers = @producers
-    Process.unlink(socket)
     state = %{
       device: device,
       queue: @queue,
-      target: target,
+      system: system,
       topic: topic,
-      message: nil
+      message: nil,
+      key: "#{@prefix}/#{@org}/#{system}",
+      timeout_t: nil
     }
 
     subscriptions = Enum.map(producers, &({&1, [
       max_demand: 1,
-      selector: fn(message) ->
-        body =
-          message
-          |> Map.get(:body)
-          |> Poison.decode!
-        records =
-          Map.get(body, "Records")
-        Enum.any?(records, fn(record) ->
-          get_in(record, ["s3", "object", "key"])
-          |> IO.inspect
-          |> String.starts_with?("fw/#{target}")
-          |> IO.inspect
-        end)
+      selector: fn(%{key: key}) ->
+        String.starts_with?(key, state.key)
       end
     ]}))
     {:consumer, state, subscribe_to: subscriptions}
@@ -49,17 +43,22 @@ defmodule NervesTestServer.Device do
 
   def handle_call({:result, result}, _from, s) do
     # TODO: Persist the results to the DB
+    if t = s.timeout_t do
+      Process.cancel_timer(t)
+    end
+
     Logger.debug "Device Received Results: #{inspect result}"
+    Logger.debug "Message: #{inspect s.message}"
     {:reply, :ok, [], delete_message(s)}
   end
 
-  def handle_events(message, _from, s) do
-    handle_message(message, s)
-    {:noreply, [], %{s | message: message}}
+  def handle_info(:timeout, s) do
+    Logger.debug "Timeout Expired"
+    {:noreply, [], s}
   end
 
-  defp handle_message(message, state) do
-    process_message(message)
+  def handle_events([message], _from, s) do
+    {:noreply, [], process_message(message, s)}
   end
 
   defp delete_message(%{message: nil} = s), do: s
@@ -74,28 +73,32 @@ defmodule NervesTestServer.Device do
     %{id: Map.get(message, :message_id), receipt_handle: Map.get(message, :receipt_handle)}
   end
 
-  defp process_message(message) do
+  defp process_message(message, s) do
     ## Do something to process message here
-    #Logger.debug "Received Message: #{inspect message}"
-    body =
-      message
-      |> Map.get(:body)
-      |> Poison.decode!
-    records =
-      Map.get(body, "Records")
-    Enum.each(records, fn(record) ->
-      case get_in(record, ["s3", "object", "key"]) do
-        nil -> :noop
-        key ->
-          IO.inspect key, label: "Key"
-          # TODO: Publish to the device to tell it to load the new fw
-          # TODO: Start a timer to wait for the device.
-          #  If the timer expires, kill the process.
-          #  Ack the message when the timer expires.
-          #  Save a record that the fw was bad
-      end
-    end)
-    {:ok, message}
+    Logger.debug "Received Message: #{inspect message}"
+    @prefix <> "/" <> key_path = message.key
+    [org, system, fw] =
+      String.split(key_path, "/", parts: 3)
+    vcs_id = Path.rootname(fw)
+    # build =
+    #   %Build{
+    #     org: org,
+    #     system: system,
+    #     vcs_id: vcs_id
+    #   }
+    # Repo.insert(build)
+    Endpoint.broadcast(s.topic, "apply", %{"fw" => fw_url(org, system, fw)})
+
+    t = Process.send_after(self(), :timeout, @timeout)
+    # TODO: Start a timer to wait for the device.
+    #  If the timer expires, kill the process.
+    #  Ack the message when the timer expires.
+    #  Save a record that the fw was bad
+    %{s | message: message, timeout_t: t}
+  end
+
+  def fw_url(org, system, fw) do
+    NervesTestServer.Web.Endpoint.url <> "/#{org}/#{system}/#{fw}"
   end
 
 end

@@ -3,27 +3,53 @@ defmodule NervesTestServer.Web.DeviceChannel do
   require Logger
   alias NervesTestServer.Device
 
-  def join("device:" <> device, %{"target" => target}, socket) do
-    Logger.debug "Device #{device} Joined"
+  def join("device:" <> device, payload, socket) do
+    system = Map.get(payload, "system")
+    status = Map.get(payload, "status")
+    Logger.debug """
+      Joined
+      Device: #{device}
+      System: #{system}
+    """
     #Logger.debug "Params: #{inspect payload}"
-    connect(device, "device:" <> device, target)
+    if status == "ready" do
+      connect(device, "device:" <> device, system)
+    end
+
     socket =
-      assign(socket, :device, device)
+      socket
+      |> assign(:device, device)
+      |> assign(:system, system)
     {:ok, socket}
   end
 
-  def handle_in("test_results", payload, socket) do
-    Logger.debug "#{socket.assigns[:device]} Received Results: #{inspect payload}"
-    result(socket.assigns[:device], payload) |> IO.inspect
-    {:reply, {:ok, %{status: "results_received"}}, socket}
+  def handle_in("test_begin", payload, socket) do
+    #TODO: Unlink from the device genserver and set the timers
+    {:reply, {:ok, %{"test" => "begin"}}, socket}
   end
 
-  def connect(device, topic, target) do
+  def handle_in("test_results", payload, socket) do
+    device = socket.assigns[:device]
+    system = socket.assigns[:system]
+    result_payload = Map.take(payload, ["test_result", "test_io"])
+    result = Map.get(result_payload, "test_result")
+    Logger.debug """
+      Test Results
+      Device: #{device}
+      System: #{system}
+      Result: #{result}
+    """
+    connect(device, "device:" <> device, system)
+    result(device, result_payload)
+    {:reply, {:ok, %{test: :ok}}, socket}
+  end
+
+  def connect(device, topic, system) do
     pidname = pname(device)
     if pid = Process.whereis(pidname) do
       {:ok, pid}
     else
-      NervesTestServer.Device.start_link(device, topic, target, [name: pidname])
+      NervesTestServer.Device.start_link(device, system, topic, [name: pidname])
     end
   end
 

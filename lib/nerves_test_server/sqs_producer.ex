@@ -24,7 +24,7 @@ defmodule NervesTestServer.SQSProducer do
   end
   def handle_demand(incoming_demand, state) do
     new_demand = state.demand + incoming_demand
-    
+
     {:noreply, [], %{state| demand: new_demand}}
   end
 
@@ -37,7 +37,7 @@ defmodule NervesTestServer.SQSProducer do
 
     messages = case aws_resp do
       {:ok, resp} ->
-        resp.body.messages
+        parse(resp.body.messages)
       {:error, reason} ->
         []
     end
@@ -53,5 +53,26 @@ defmodule NervesTestServer.SQSProducer do
     end
 
     {:noreply, messages, %{state| demand: new_demand}}
+  end
+
+  defp parse(messages) do
+    Enum.map(messages, fn(message) ->
+      body =
+        message
+        |> Map.get(:body)
+        |> Poison.decode!
+
+      record =
+        body
+        |> Map.get("Records")
+        |> List.first
+
+      key = get_in(record, ["s3", "object", "key"])
+      etag = get_in(record, ["s3", "object", "etag"])
+
+      Map.take(message, [:message_id, :receipt_handle])
+      |> Map.put(:key, key)
+      |> Map.put(:etag, etag)
+    end)
   end
 end

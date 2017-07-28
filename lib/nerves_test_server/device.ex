@@ -1,7 +1,9 @@
 defmodule NervesTestServer.Device do
   use GenStage
-
   require Logger
+
+  import Ecto.Query
+
   alias ExAws.SQS
   alias NervesTestServer.Web.Endpoint
   alias NervesTestServer.{Repo, Build}
@@ -10,14 +12,18 @@ defmodule NervesTestServer.Device do
   @prefix "test_server"
   @org "nerves-project"
   @producers [NervesTestServer.SQSProducer]
-  @timeout 60_000 * 9 # 9 minutes
+  @timeout 60_000 * 5 # 5 minutes
 
   def start_link(device, system, topic, opts \\ []) do
     GenStage.start_link(__MODULE__, {device, system, topic, self()}, opts) |> IO.inspect
   end
 
-  def result(pid, result) do
-    GenStage.call(pid, {:result, result})
+  def test_begin(pid) do
+    GenStage.call(pid, :test_begin)
+  end
+
+  def test_result(pid, result) do
+    GenStage.call(pid, {:test_result, result})
   end
 
   def init({device, system, topic, socket}) do
@@ -29,7 +35,8 @@ defmodule NervesTestServer.Device do
       topic: topic,
       message: nil,
       key: "#{@prefix}/#{@org}/#{system}",
-      timeout_t: nil
+      timeout_t: nil,
+      build: nil
     }
 
     subscriptions = Enum.map(producers, &({&1, [
@@ -41,12 +48,27 @@ defmodule NervesTestServer.Device do
     {:consumer, state, subscribe_to: subscriptions}
   end
 
-  def handle_call({:result, result}, _from, s) do
-    # TODO: Persist the results to the DB
+  def handle_call(:test_begin, {from, _ref}, s) do
+    Logger.debug "Device Test Beginning"
+    Process.unlink(from)
+    build =
+      Build.changeset(s.build, %{start_time: Ecto.DateTime.utc})
+      |> Repo.update!
+    {:reply, :ok, [], %{s | build: build}}
+  end
+
+  def handle_call({:test_result, result}, _from, s) do
     if t = s.timeout_t do
       Process.cancel_timer(t)
     end
-
+    change = %{
+      end_time: Ecto.DateTime.utc,
+      result: Map.get(result, "test_results"),
+      result_io: Map.get(result, "test_io")
+    }
+    build =
+      Build.changeset(s.build, change)
+      |> Repo.update!
     Logger.debug "Device Received Results: #{inspect result}"
     Logger.debug "Message: #{inspect s.message}"
     {:reply, :ok, [], delete_message(s)}
@@ -70,7 +92,7 @@ defmodule NervesTestServer.Device do
   end
 
   defp make_batch_item(message) do
-    %{id: Map.get(message, :message_id), receipt_handle: Map.get(message, :receipt_handle)}
+    [%{id: Map.get(message, :message_id), receipt_handle: Map.get(message, :receipt_handle)}]
   end
 
   defp process_message(message, s) do
@@ -80,25 +102,41 @@ defmodule NervesTestServer.Device do
     [org, system, fw] =
       String.split(key_path, "/", parts: 3)
     vcs_id = Path.rootname(fw)
-    # build =
-    #   %Build{
-    #     org: org,
-    #     system: system,
-    #     vcs_id: vcs_id
-    #   }
-    # Repo.insert(build)
-    Endpoint.broadcast(s.topic, "apply", %{"fw" => fw_url(org, system, fw)})
+    s =
+      case fetch_build(vcs_id) do
+        nil ->
+          build = create_build(org, system, vcs_id, s.device)
+          Endpoint.broadcast(s.topic, "apply", %{"fw" => fw_url(org, system, fw)})
+          t = Process.send_after(self(), :timeout, @timeout)
+          %{s | timeout_t: t, build: build}
+        _build ->
+          Logger.warn "Build: #{vcs_id} already exists"
+          delete_message(s)
+      end
 
-    t = Process.send_after(self(), :timeout, @timeout)
-    # TODO: Start a timer to wait for the device.
-    #  If the timer expires, kill the process.
-    #  Ack the message when the timer expires.
-    #  Save a record that the fw was bad
-    %{s | message: message, timeout_t: t}
+    %{s | message: message}
   end
 
   def fw_url(org, system, fw) do
     NervesTestServer.Web.Endpoint.url <> "/#{org}/#{system}/#{fw}"
+  end
+
+  def fetch_build(vcs_id) do
+    q = from b in Build,
+      where: b.vcs_id == ^vcs_id,
+      select: b
+    Repo.one(q)
+  end
+
+  def create_build(org, system, vcs_id, device) do
+    build =
+      %Build{
+        org: org,
+        system: system,
+        vcs_id: vcs_id,
+        device: device
+      }
+    Repo.insert!(build)
   end
 
 end

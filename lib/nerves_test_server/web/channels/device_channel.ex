@@ -25,22 +25,29 @@ defmodule NervesTestServer.Web.DeviceChannel do
 
   def handle_in("test_begin", payload, socket) do
     #TODO: Unlink from the device genserver and set the timers
+    device = socket.assigns[:device]
+    Device.test_begin(pname(device))
     {:reply, {:ok, %{"test" => "begin"}}, socket}
   end
 
   def handle_in("test_results", payload, socket) do
     device = socket.assigns[:device]
     system = socket.assigns[:system]
-    result_payload = Map.take(payload, ["test_result", "test_io"])
-    result = Map.get(result_payload, "test_result")
+    result_payload = Map.take(payload, ["test_results", "test_io"])
+    result = Map.get(result_payload, "test_results")
+    Logger.debug "Payload: #{inspect payload}"
     Logger.debug """
       Test Results
       Device: #{device}
       System: #{system}
-      Result: #{result}
+      Result: #{inspect result}
     """
-    connect(device, "device:" <> device, system)
-    result(device, result_payload)
+    if pid = Process.whereis(pname(device)) do
+      Device.test_result(pid, result_payload)
+    else
+      connect(device, "device:" <> device, system)
+    end
+
     {:reply, {:ok, %{test: :ok}}, socket}
   end
 
@@ -57,15 +64,6 @@ defmodule NervesTestServer.Web.DeviceChannel do
     pidname = pname(device)
     if Process.whereis(pidname) do
       Process.exit(pidname, :normal)
-    else
-      {:error, :not_started}
-    end
-  end
-
-  def result(device, result) do
-    pidname = pname(device)
-    if pid = Process.whereis(pidname) do
-      Device.result(pid, result)
     else
       {:error, :not_started}
     end

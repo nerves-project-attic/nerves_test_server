@@ -2,7 +2,8 @@ defmodule NervesTestServer.Repo.Migrations.CreateNervesTestServer.Build do
   use Ecto.Migration
 
   def change do
-    create table(:builds) do
+    create table(:builds, primary_key: false) do
+      add :id, :uuid, primary_key: true
       add :vcs_id, :string
       add :org, :string
       add :system, :string

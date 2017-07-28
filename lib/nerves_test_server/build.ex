@@ -3,16 +3,17 @@ defmodule NervesTestServer.Build do
   import Ecto.Changeset
   alias NervesTestServer.Build
 
+  @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "builds" do
-    field :end_time, :utc_datetime
+    field :vcs_id, :string
+    field :org, :string
+    field :system, :string
     field :device, :string
     field :result, :map
     field :result_io, :string
-    field :start_time, :utc_datetime
-    field :org, :string
-    field :system, :string
-    field :vcs_id, :string
+    field :start_time, Ecto.DateTime
+    field :end_time, Ecto.DateTime
 
     timestamps()
   end

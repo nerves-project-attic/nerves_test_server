@@ -99,9 +99,10 @@ defmodule NervesTestServer.Device do
     ## Do something to process message here
     Logger.debug "Received Message: #{inspect message}"
     @prefix <> "/" <> key_path = message.key
-    [org, system, fw] =
+    [org, system, context] =
       String.split(key_path, "/", parts: 3)
-    vcs_id = Path.rootname(fw)
+    vcs_id = Path.rootname(context)
+    fw = vcs_id <> ".fw"
     s =
       case fetch_build(vcs_id) do
         nil ->

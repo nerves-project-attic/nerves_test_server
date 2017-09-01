@@ -1,0 +1,28 @@
+<h2>Builds for <%= @org %> Organization</h2>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Build ID</th>
+      <th>Organization</th>
+      <th>System</th>
+      <th>VCS ID</th>
+      <th>Device</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= for build <- @builds do %>
+      <tr>
+        <td><%= link build.id, to: build_path(@conn, :build, build.org, build.system, build.id) %></td>
+        <td class="col-sm-2"><%= build.org %></td>
+        <td class="col-sm-2"><%= build.system %></td>
+        <td class="col-sm-2"><%= build.vcs_id %></td>
+        <td class="col-sm-2"><%= build.device %></td>
+        <td class="col-sm-2"><%= build.start_time %></td>
+        <td class="col-sm-2"><%= build.end_time %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

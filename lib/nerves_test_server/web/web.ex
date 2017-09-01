@@ -22,6 +22,10 @@ defmodule NervesTestServer.Web do
       import Plug.Conn
       import NervesTestServer.Web.Router.Helpers
       import NervesTestServer.Web.Gettext
+      alias NervesTestServer.{
+        Build,
+        Repo,
+      }
     end
   end
 

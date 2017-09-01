@@ -1,0 +1,40 @@
+<%= if assigns[:repo] do %>
+  <h2>Builds for <%= @org %>/<%= @repo %></h2>
+<% else %>
+  <h2>Builds for <%= @org %> Organization</h2>
+<% end %>
+
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Build ID</th>
+      <th>Organization</th>
+      <th>System</th>
+      <th>VCS ID</th>
+      <th>Device</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= for build <- @builds do %>
+      <tr>
+        <td><%= build.status %></td>
+        <td>
+          <%= link build.id, to: build_path(@conn, :show, build.org, build.system, build.id) %>
+        </td>
+        <td>
+          <%= link build.org, to: build_path(@conn, :org_index, build.org) %>
+        </td>
+        <td>
+          <%= link build.system, to: build_path(@conn, :repo_index, build.org, build.system) %>
+        </td>
+        <td><%= build.vcs_id %></td>
+        <td><%= build.device %></td>
+        <td><%= build.start_time %></td>
+        <td><%= build.end_time %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

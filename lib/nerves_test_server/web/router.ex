@@ -17,7 +17,12 @@ defmodule NervesTestServer.Web.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
-    get "/:org/:repo/:fw", FwController, :firmware
+
+    get "/:org", BuildController, :org_index
+    get "/:org/:repo", BuildController, :repo_index
+    get "/:org/:repo/:build", BuildController, :show
+
+    get "/:org/:repo/:build/:fw", FwController, :firmware
   end
 
   # Other scopes may use custom stacks.

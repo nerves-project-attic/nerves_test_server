@@ -7,7 +7,9 @@ defmodule NervesTestServer.Web.BuildController do
     builds =
       Repo.all(
         from b in Build,
-        where: b.org == ^org)
+        where: b.org == ^org,
+        order_by: [desc: :inserted_at],
+        limit: 50)
       |> set_build_status()
     render conn, "index.html", org: org, builds: builds
   end
@@ -17,7 +19,9 @@ defmodule NervesTestServer.Web.BuildController do
       Repo.all(
         from b in Build,
         where: b.org == ^org,
-        where: b.system == ^repo)
+        where: b.system == ^repo,
+        order_by: [desc: :inserted_at],
+        limit: 50)
       |> set_build_status()
     render conn, "index.html", org: org, repo: repo, builds: builds
   end

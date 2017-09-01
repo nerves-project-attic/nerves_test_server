@@ -19,7 +19,7 @@
   </thead>
   <tbody>
     <%= for build <- @builds do %>
-      <tr>
+      <tr class="<%= table_class_for_build_status(build.status) %>">
         <td><%= build.status %></td>
         <td>
           <%= link build.id, to: build_path(@conn, :show, build.org, build.system, build.id) %>

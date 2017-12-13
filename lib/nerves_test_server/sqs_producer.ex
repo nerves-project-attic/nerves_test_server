@@ -35,6 +35,7 @@ defmodule NervesTestServer.SQSProducer do
     )
     |> ExAws.request
 
+    IO.inspect aws_resp, label: "SQS Response"
     messages = case aws_resp do
       {:ok, resp} ->
         parse(resp.body.messages)
@@ -62,17 +63,34 @@ defmodule NervesTestServer.SQSProducer do
         |> Map.get(:body)
         |> Poison.decode!
 
-      record =
+      meta =
         body
-        |> Map.get("Records")
-        |> List.first
+        |> Map.get("Message")
+        |> Poison.decode!
+        |> IO.inspect(label: "Meta")
+      vcs_id = Map.get(meta, "sha")
+      repo_org = Map.get(meta, "repo_org")
+      repo_name = Map.get(meta, "repo_name")
 
-      key = get_in(record, ["s3", "object", "key"])
-      etag = get_in(record, ["s3", "object", "etag"])
+      build_num = Map.get(meta, "ci_build_num")
 
+      circle_proj =
+        %CircleCI.Project{vcs_type: "github"}
+        |> Map.put(:username, repo_org)
+        |> Map.put(:project, repo_name)
+
+      {:ok, resp} = 
+        CircleCI.Project.Build.artifacts(circle_proj, build_num)
+      
+      fw_url = 
+        Enum.find(resp.body, & Map.get(&1, "pretty_path") |> String.ends_with?("fw"))
+        |> Map.get("url")
+      
       Map.take(message, [:message_id, :receipt_handle])
-      |> Map.put(:key, key)
-      |> Map.put(:etag, etag)
+      |> Map.put(:repo_org, repo_org)
+      |> Map.put(:repo_name, repo_name)
+      |> Map.put(:fw_url, fw_url)
+      |> Map.put(:vcs_id, vcs_id)
     end)
   end
 end

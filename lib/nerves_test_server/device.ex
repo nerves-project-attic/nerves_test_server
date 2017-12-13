@@ -9,8 +9,7 @@ defmodule NervesTestServer.Device do
   alias NervesTestServer.{Repo, Build}
 
   @queue "nerves-test-server"
-  @prefix "test_server"
-  @org "nerves-project"
+  @repo_org "nerves-project"
   @producers [NervesTestServer.SQSProducer]
   @timeout 60_000 * 5 # 5 minutes
 
@@ -34,15 +33,17 @@ defmodule NervesTestServer.Device do
       system: system,
       topic: topic,
       message: nil,
-      key: "#{@prefix}/#{@org}/#{system}",
+      repo_org: @repo_org,
+      repo_name: "nerves_system_" <> system,
       timeout_t: nil,
       build: nil
     }
 
     subscriptions = Enum.map(producers, &({&1, [
       max_demand: 1,
-      selector: fn(%{key: key}) ->
-        String.starts_with?(key, state.key)
+      selector: fn(%{repo_org: repo_org, repo_name: repo_name}) ->
+        String.equivalent?(repo_org, state.repo_org) and
+        String.equivalent?(repo_name, state.repo_name)
       end
     ]}))
     {:consumer, state, subscribe_to: subscriptions}
@@ -98,16 +99,16 @@ defmodule NervesTestServer.Device do
   defp process_message(message, s) do
     ## Do something to process message here
     Logger.debug "Received Message: #{inspect message}"
-    @prefix <> "/" <> key_path = message.key
-    [org, system, context] =
-      String.split(key_path, "/", parts: 3)
-    vcs_id = Path.rootname(context)
-    fw = vcs_id <> ".fw"
+    org = message.repo_org
+    system = message.repo_name
+    vcs_id = message.vcs_id
+    fw_url = message.fw_url
+    
     s =
       case fetch_build(vcs_id) do
         nil ->
           build = create_build(org, system, vcs_id, s.device)
-          Endpoint.broadcast(s.topic, "apply", %{"fw" => fw_url(org, system, fw)})
+          Endpoint.broadcast(s.topic, "apply", %{"fw" => fw_url})
           t = Process.send_after(self(), :timeout, @timeout)
           %{s | timeout_t: t, build: build}
         _build ->

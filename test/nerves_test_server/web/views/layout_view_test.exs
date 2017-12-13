@@ -1,3 +1,3 @@
-defmodule NervesTestServer.Web.LayoutViewTest do
-  use NervesTestServer.Web.ConnCase, async: true
+defmodule NervesTestServerWeb.LayoutViewTest do
+  use NervesTestServerWeb.ConnCase, async: true
 end

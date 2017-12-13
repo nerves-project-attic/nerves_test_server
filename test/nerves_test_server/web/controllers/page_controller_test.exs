@@ -1,5 +1,5 @@
-defmodule NervesTestServer.Web.PageControllerTest do
-  use NervesTestServer.Web.ConnCase
+defmodule NervesTestServerWeb.PageControllerTest do
+  use NervesTestServerWeb.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"

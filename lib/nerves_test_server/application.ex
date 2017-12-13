@@ -12,7 +12,7 @@ defmodule NervesTestServer.Application do
     children = [
       # Start the Ecto repository
       supervisor(NervesTestServer.Repo, []),
-      supervisor(NervesTestServer.Web.Endpoint, []),
+      supervisor(NervesTestServerWeb.Endpoint, []),
       worker(NervesTestServer.SQSProducer, [@queue, [name: NervesTestServer.SQSProducer]]),
     ]
 

@@ -1,7 +1,7 @@
-defmodule NervesTestServer.Web.DeviceChannelTest do
-  use NervesTestServer.Web.ChannelCase
+defmodule NervesTestServerWeb.DeviceChannelTest do
+  use NervesTestServerWeb.ChannelCase
 
-  alias NervesTestServer.Web.DeviceChannel
+  alias NervesTestServerWeb.DeviceChannel
 
   setup do
     {:ok, _, socket} =

@@ -5,7 +5,7 @@ defmodule NervesTestServer.Device do
   import Ecto.Query
 
   alias ExAws.SQS
-  alias NervesTestServer.Web.Endpoint
+  alias NervesTestServerWeb.Endpoint
   alias NervesTestServer.{Repo, Build}
 
   @queue "nerves-test-server"
@@ -103,7 +103,7 @@ defmodule NervesTestServer.Device do
     system = message.repo_name
     vcs_id = message.vcs_id
     fw_url = message.fw_url
-    
+
     s =
       case fetch_build(vcs_id) do
         nil ->
@@ -120,7 +120,7 @@ defmodule NervesTestServer.Device do
   end
 
   def fw_url(org, system, fw) do
-    NervesTestServer.Web.Endpoint.url <> "/#{org}/#{system}/#{fw}"
+    NervesTestServerWeb.Endpoint.url <> "/#{org}/#{system}/#{fw}"
   end
 
   def fetch_build(vcs_id) do

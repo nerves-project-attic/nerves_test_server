@@ -55,7 +55,7 @@ defmodule NervesTestServer.SQSProducer do
     {:noreply, messages, %{state| demand: new_demand}}
   end
 
-  defp parse(messages) do
+  def parse(messages) do
     Enum.map(messages, fn(message) ->
       body =
         message

@@ -40,7 +40,8 @@ defmodule NervesTestServer.Mixfile do
      {:poison, "~> 2.0"},
      {:hackney, "~> 1.6"},
      {:sweet_xml, "~> 0.6.5"},
-     {:gen_stage, "~> 0.12"}]
+     {:gen_stage, "~> 0.12"},
+     {:circle_ci, "~> 0.1"}]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

@@ -34,10 +34,10 @@ defmodule NervesTestServer.Device do
       topic: topic,
       message: nil,
       repo_org: @repo_org,
-      repo_name: "nerves_system_" <> system,
+      repo_name: system,
       timeout_t: nil,
       build: nil
-    }
+    } |> IO.inspect(label: "Device")
 
     subscriptions = Enum.map(producers, &({&1, [
       max_demand: 1,

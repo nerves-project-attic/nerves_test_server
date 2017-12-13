@@ -53,7 +53,7 @@ defmodule NervesTestServer.Device do
     Logger.debug "Device Test Beginning"
     Process.unlink(from)
     build =
-      Build.changeset(s.build, %{start_time: Ecto.DateTime.utc})
+      Build.changeset(s.build, %{start_time: :calendar.local_time()})
       |> Repo.update!
     {:reply, :ok, [], %{s | build: build}}
   end
@@ -63,7 +63,7 @@ defmodule NervesTestServer.Device do
       Process.cancel_timer(t)
     end
     change = %{
-      end_time: Ecto.DateTime.utc,
+      end_time: :calendar.local_time(),
       result: Map.get(result, "test_results"),
       result_io: Map.get(result, "test_io")
     }

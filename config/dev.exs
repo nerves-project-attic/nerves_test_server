@@ -56,3 +56,6 @@ config :nerves_test_server, NervesTestServer.Repo,
   database: "nerves_test_server_dev",
   hostname: "localhost",
   pool_size: 10
+
+config :nerves_test_server,
+  producer: NervesTestServer.Producers.Local

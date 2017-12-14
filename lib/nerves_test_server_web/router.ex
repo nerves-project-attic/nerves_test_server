@@ -21,8 +21,6 @@ defmodule NervesTestServerWeb.Router do
     get "/:org", BuildController, :org_index
     get "/:org/:repo", BuildController, :repo_index
     get "/:org/:repo/:build", BuildController, :show
-
-    get "/:org/:repo/:build/:fw", FwController, :firmware
   end
 
   # Other scopes may use custom stacks.

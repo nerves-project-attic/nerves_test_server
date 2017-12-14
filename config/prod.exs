@@ -29,6 +29,12 @@ config :nerves_test_server, NervesTestServer.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 
+config :nerves_test_server,
+  producer: NervesTestServer.Producers.SQS
+
+config :nerves_test_server, NervesTestServer.Producers.SQS,
+  queue_name: "nerves-test-server"
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key

@@ -3,6 +3,8 @@ defmodule NervesTestServerWeb.DeviceChannel do
   require Logger
   alias NervesTestServer.Device
 
+  @producer Application.get_env(:nerves_test_server, :producer)
+
   def join("device:" <> device, payload, socket) do
     system = Map.get(payload, "system")
     status = Map.get(payload, "status")
@@ -23,7 +25,7 @@ defmodule NervesTestServerWeb.DeviceChannel do
     {:ok, socket}
   end
 
-  def handle_in("test_begin", payload, socket) do
+  def handle_in("test_begin", _payload, socket) do
     #TODO: Unlink from the device genserver and set the timers
     device = socket.assigns[:device]
     Device.test_begin(pname(device))
@@ -56,7 +58,12 @@ defmodule NervesTestServerWeb.DeviceChannel do
     if pid = Process.whereis(pidname) do
       {:ok, pid}
     else
-      NervesTestServer.Device.start_link(device, system, topic, [name: pidname])
+      NervesTestServer.Device.start_link(
+        device, 
+        system, 
+        topic,
+        @producer, 
+        [name: pidname])
     end
   end
 

@@ -1,12 +1,20 @@
-defmodule NervesTestServer.SQSProducer do
-  use GenStage
-  require Logger
+defmodule NervesTestServer.Producers.SQS do
+  use NervesTestServer.Producer
+  
+  alias ExAws.SQS
 
-  def start_link(queue_name, opts \\ []) do
-    GenStage.start_link(__MODULE__, queue_name, opts)
+  def start_link(opts \\ []) do
+    GenStage.start_link(__MODULE__, opts, [name: __MODULE__])
   end
 
-  def init(queue_name) do
+  def ack(nil), do: :ok
+  def ack(message) do
+    GenStage.call(__MODULE__, {:ack, message})
+  end
+
+  def init(opts) do
+    queue_name = opts[:queue_name] || 
+      raise "SQS Producer requires a queue name to be configured"
     state = %{
       demand: 0,
       queue: queue_name
@@ -28,6 +36,13 @@ defmodule NervesTestServer.SQSProducer do
     {:noreply, [], %{state| demand: new_demand}}
   end
 
+  def handle_call({:ack, message}, _from, state) do
+    state.queue
+    |> SQS.delete_message_batch(make_batch_item(message.meta))
+    |> ExAws.request
+    {:reply, :ok, [], state}
+  end
+
   def handle_info(:get_messages, state) do
     aws_resp = ExAws.SQS.receive_message(
       state.queue,
@@ -39,7 +54,7 @@ defmodule NervesTestServer.SQSProducer do
     messages = case aws_resp do
       {:ok, resp} ->
         parse(resp.body.messages)
-      {:error, reason} ->
+      {:error, _reason} ->
         []
     end
 
@@ -86,11 +101,17 @@ defmodule NervesTestServer.SQSProducer do
         Enum.find(resp.body, & Map.get(&1, "pretty_path") |> String.ends_with?("fw"))
         |> Map.get("url")
       
-      Map.take(message, [:message_id, :receipt_handle])
-      |> Map.put(:repo_org, repo_org)
-      |> Map.put(:repo_name, repo_name)
-      |> Map.put(:fw_url, fw_url)
-      |> Map.put(:vcs_id, vcs_id)
+      %NervesTestServer.Message{
+        meta: Map.take(message, [:message_id, :receipt_handle]),
+        repo_org: repo_org,
+        repo_name: repo_name, 
+        fw_url: fw_url,
+        vcs_id: vcs_id
+      }
     end)
+  end
+
+  defp make_batch_item(message) do
+    [%{id: Map.get(message, :message_id), receipt_handle: Map.get(message, :receipt_handle)}]
   end
 end

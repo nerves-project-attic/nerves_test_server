@@ -4,17 +4,14 @@ defmodule NervesTestServer.Device do
 
   import Ecto.Query
 
-  alias ExAws.SQS
   alias NervesTestServerWeb.Endpoint
   alias NervesTestServer.{Repo, Build}
 
-  @queue "nerves-test-server"
   @repo_org "nerves-project"
-  @producers [NervesTestServer.SQSProducer]
   @timeout 60_000 * 5 # 5 minutes
 
-  def start_link(device, system, topic, opts \\ []) do
-    GenStage.start_link(__MODULE__, {device, system, topic, self()}, opts) |> IO.inspect
+  def start_link(device, system, topic, producer, opts \\ []) do
+    GenStage.start_link(__MODULE__, {device, system, topic, producer}, opts)
   end
 
   def test_begin(pid) do
@@ -25,11 +22,11 @@ defmodule NervesTestServer.Device do
     GenStage.call(pid, {:test_result, result})
   end
 
-  def init({device, system, topic, socket}) do
-    producers = @producers
+  def init({device, system, topic, producer}) do
+
     state = %{
+      producer: producer,
       device: device,
-      queue: @queue,
       system: system,
       topic: topic,
       message: nil,
@@ -37,15 +34,15 @@ defmodule NervesTestServer.Device do
       repo_name: system,
       timeout_t: nil,
       build: nil
-    } |> IO.inspect(label: "Device")
+    }
 
-    subscriptions = Enum.map(producers, &({&1, [
+    subscriptions = [{producer, [
       max_demand: 1,
       selector: fn(%{repo_org: repo_org, repo_name: repo_name}) ->
         String.equivalent?(repo_org, state.repo_org) and
         String.equivalent?(repo_name, state.repo_name)
       end
-    ]}))
+    ]}]
     {:consumer, state, subscribe_to: subscriptions}
   end
 
@@ -67,12 +64,12 @@ defmodule NervesTestServer.Device do
       result: Map.get(result, "test_results"),
       result_io: Map.get(result, "test_io")
     }
-    build =
-      Build.changeset(s.build, change)
-      |> Repo.update!
+    Build.changeset(s.build, change)
+    |> Repo.update!
     Logger.debug "Device Received Results: #{inspect result}"
     Logger.debug "Message: #{inspect s.message}"
-    {:reply, :ok, [], delete_message(s)}
+    s.producer.ack(s.message)
+    {:reply, :ok, [], %{s | message: nil}}
   end
 
   def handle_info(:timeout, s) do
@@ -82,18 +79,6 @@ defmodule NervesTestServer.Device do
 
   def handle_events([message], _from, s) do
     {:noreply, [], process_message(message, s)}
-  end
-
-  defp delete_message(%{message: nil} = s), do: s
-  defp delete_message(%{message: message} = s) do
-    s.queue
-    |> SQS.delete_message_batch(make_batch_item(message))
-    |> ExAws.request
-    %{s | message: nil}
-  end
-
-  defp make_batch_item(message) do
-    [%{id: Map.get(message, :message_id), receipt_handle: Map.get(message, :receipt_handle)}]
   end
 
   defp process_message(message, s) do
@@ -113,7 +98,8 @@ defmodule NervesTestServer.Device do
           %{s | timeout_t: t, build: build}
         _build ->
           Logger.warn "Build: #{vcs_id} already exists"
-          delete_message(s)
+          s.producer.ack(s.message)
+          %{s | message: nil}
       end
 
     %{s | message: message}

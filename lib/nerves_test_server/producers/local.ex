@@ -8,7 +8,7 @@ defmodule NervesTestServer.Producers.Local do
 
   def ack(nil), do: :ok
   def ack(message) do
-    GenStage.call(__MODULE__, {:ack, message})
+    GenStage.cast(__MODULE__, {:ack, message})
   end
 
   def init(_opts) do
@@ -24,7 +24,7 @@ defmodule NervesTestServer.Producers.Local do
     {:noreply, [], %{state| demand: new_demand}}
   end
 
-  def handle_call({:ack, _message}, _from, state) do
+  def handle_cast({:ack, _message}, state) do
     {:reply, :ok, [], state}
   end
 end

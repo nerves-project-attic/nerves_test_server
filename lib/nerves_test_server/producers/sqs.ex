@@ -9,7 +9,7 @@ defmodule NervesTestServer.Producers.SQS do
 
   def ack(nil), do: :ok
   def ack(message) do
-    GenStage.call(__MODULE__, {:ack, message})
+    GenStage.cast(__MODULE__, {:ack, message})
   end
 
   def init(opts) do
@@ -36,11 +36,11 @@ defmodule NervesTestServer.Producers.SQS do
     {:noreply, [], %{state| demand: new_demand}}
   end
 
-  def handle_call({:ack, message}, _from, state) do
+  def handle_cast({:ack, message}, state) do
     state.queue
     |> SQS.delete_message_batch(make_batch_item(message.meta))
     |> ExAws.request
-    {:reply, :ok, [], state}
+    {:noreply, [], state}
   end
 
   def handle_info(:get_messages, state) do

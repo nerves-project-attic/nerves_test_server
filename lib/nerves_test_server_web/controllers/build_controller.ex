@@ -48,6 +48,10 @@ defmodule NervesTestServerWeb.BuildController do
         build
         |> Map.from_struct()
         |> Map.put(:status, "Pass")
+      %{"timeout" => _} ->
+        build
+        |> Map.from_struct()
+        |> Map.put(:status, "Timeout")
       _ ->
         build
         |> Map.from_struct()

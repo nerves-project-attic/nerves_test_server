@@ -5,6 +5,7 @@ defmodule NervesTestServerWeb.BuildView do
     case status do
       "Pass" -> "table-success"
       "Fail" -> "table-danger"
+      "Timeout" -> "table-danger"
       _ -> ""
     end
   end

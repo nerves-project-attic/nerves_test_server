@@ -74,7 +74,14 @@ defmodule NervesTestServer.Device do
 
   def handle_info(:timeout, s) do
     Logger.debug "Timeout Expired"
-    {:noreply, [], s}
+    change = %{
+      end_time: DateTime.utc_now,
+      result: %{"timeout" => 0},
+      result_io: "Timed out waiting for results"
+    }
+    Build.changeset(s.build, change)
+    s.producer.ack(s.message)
+    {:noreply, [], %{s | build: nil, message: nil}}
   end
 
   def handle_events([message], _from, s) do

@@ -162,6 +162,7 @@ defmodule NervesTestServer.Device do
           %{s | timeout_t: t, build: build}
         _build ->
           Logger.warn "Build: #{vcs_id} already exists"
+          GenStage.ask(s.subscription, 1)
           s.producer.ack(s.message)
           %{s | message: nil}
       end

@@ -33,7 +33,8 @@ defmodule NervesTestServer.Device do
       repo_org: @repo_org,
       repo_name: system,
       timeout_t: nil,
-      build: nil
+      build: nil,
+      subscription: nil
     }
 
     subscriptions = [{producer, [
@@ -44,6 +45,12 @@ defmodule NervesTestServer.Device do
       end
     ]}]
     {:consumer, state, subscribe_to: subscriptions}
+  end
+  
+  def handle_subscribe(:producer, _options, subscription, s) do
+    GenStage.ask(subscription, 1)
+    s = %{s | subscription: subscription}
+    {:manual, s}
   end
 
   def handle_call(:test_begin, {from, _ref}, s) do
@@ -91,10 +98,10 @@ defmodule NervesTestServer.Device do
       Nerves Hardware Test 
       Status: Results Received
       #{inspect result_map}
-      #{inspect build_url}
+      #{build_url}
       """}, 
       client)
-
+    GenStage.ask(s.subscription, 1)
     s.producer.ack(s.message)
     {:reply, :ok, [], %{s | message: nil}}
   end
@@ -126,10 +133,10 @@ defmodule NervesTestServer.Device do
       Nerves Hardware Test
       Status: Timed Out
 
-      #{inspect build_url}
+      #{build_url}
       """}, 
       client)
-    
+    GenStage.ask(s.subscription, 1)
     s.producer.ack(s.message)
     {:noreply, [], %{s | build: nil, message: nil}}
   end

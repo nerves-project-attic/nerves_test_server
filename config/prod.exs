@@ -35,6 +35,9 @@ config :nerves_test_server,
 config :nerves_test_server, NervesTestServer.Producers.SQS,
   queue_name: "nerves-test-server"
 
+config :tentacat, 
+  enabled?: true
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key

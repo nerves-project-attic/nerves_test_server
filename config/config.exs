@@ -31,6 +31,9 @@ config :circle_ci,
   token: System.get_env("NERVES_CIRCLECI_TOKEN"),
   json_module: Poison
 
+config :tentacat, 
+  token: System.get_env("NERVES_GITHUB_TOKEN")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

@@ -59,15 +59,42 @@ defmodule NervesTestServer.Device do
     if t = s.timeout_t do
       Process.cancel_timer(t)
     end
+    
+    result_map = Map.get(result, "test_results")
+    result_io =  Map.get(result, "test_io")
+
     change = %{
       end_time: DateTime.utc_now,
-      result: Map.get(result, "test_results"),
-      result_io: Map.get(result, "test_io")
+      result: result_map,
+      result_io: result_io
     }
     Build.changeset(s.build, change)
     |> Repo.update!
     Logger.debug "Device Received Results: #{inspect result}"
     Logger.debug "Message: #{inspect s.message}"
+
+    build_url = 
+      NervesTestServerWeb.Router.Helpers.build_url(
+        NervesTestServerWeb.Endpoint, 
+        :show, 
+        s.build.org, 
+        s.build.system,
+        s.build.id)
+    
+    token = Application.get_env(:tentacat, :token)
+    client = Tentacat.Client.new(%{access_token: token})
+    Tentacat.Commits.Comments.create(
+      s.build.org, 
+      s.build.system, 
+      s.build.vcs_id, 
+      %{body: """
+      Nerves Hardware Test 
+      Status: Results Received
+      #{inspect result_map}
+      #{inspect build_url}
+      """}, 
+      client)
+
     s.producer.ack(s.message)
     {:reply, :ok, [], %{s | message: nil}}
   end
@@ -80,6 +107,29 @@ defmodule NervesTestServer.Device do
       result_io: "Timed out waiting for results"
     }
     Build.changeset(s.build, change)
+
+    build_url = 
+    NervesTestServerWeb.Router.Helpers.build_url(
+      NervesTestServerWeb.Endpoint, 
+      :show, 
+      s.build.org, 
+      s.build.system,
+      s.build.id)
+    
+    token = Application.get_env(:tentacat, :token)
+    client = Tentacat.Client.new(%{access_token: token})
+    Tentacat.Commits.Comments.create(
+      s.build.org, 
+      s.build.system, 
+      s.build.vcs_id, 
+      %{body: """
+      Nerves Hardware Test
+      Status: Timed Out
+
+      #{inspect build_url}
+      """}, 
+      client)
+    
     s.producer.ack(s.message)
     {:noreply, [], %{s | build: nil, message: nil}}
   end

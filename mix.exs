@@ -28,20 +28,23 @@ defmodule NervesTestServer.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.3.0"},
-     {:phoenix_pubsub, "~> 1.0"},
-     {:phoenix_ecto, "~> 3.2"},
-     {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 2.6"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:gettext, "~> 0.11"},
-     {:cowboy, "~> 1.0"},
-     {:ex_aws, "~> 1.0"},
-     {:poison, "~> 2.0"},
-     {:hackney, "~> 1.6"},
-     {:sweet_xml, "~> 0.6.5"},
-     {:gen_stage, "~> 0.12"},
-     {:circle_ci, "~> 0.1"}]
+    [
+      {:phoenix, "~> 1.3.0"},
+      {:phoenix_pubsub, "~> 1.0"},
+      {:phoenix_ecto, "~> 3.2"},
+      {:postgrex, ">= 0.0.0"},
+      {:phoenix_html, "~> 2.6"},
+      {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:gettext, "~> 0.11"},
+      {:cowboy, "~> 1.0"},
+      {:ex_aws, "~> 1.0"},
+      {:poison, "~> 2.0"},
+      {:hackney, "~> 1.6"},
+      {:sweet_xml, "~> 0.6.5"},
+      {:gen_stage, "~> 0.12"},
+      {:circle_ci, "~> 0.1"},
+      {:tentacat, "~> 0.7"}
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

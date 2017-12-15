@@ -117,7 +117,8 @@ defmodule NervesTestServer.Device do
       result_io: "Timed out waiting for results"
     }
     Build.changeset(s.build, change)
-
+    |> Repo.update!
+    
     build_url = 
     NervesTestServerWeb.Router.Helpers.build_url(
       NervesTestServerWeb.Endpoint, 

@@ -62,6 +62,9 @@ defmodule NervesTestServer.Device do
     {:reply, :ok, [], %{s | build: build}}
   end
 
+  def handle_call({:test_result, result}, _from, %{build: nil} = s) do
+    {:reply, :ok, [], s}
+  end
   def handle_call({:test_result, result}, _from, s) do
     if t = s.timeout_t do
       Process.cancel_timer(t)
@@ -103,7 +106,7 @@ defmodule NervesTestServer.Device do
       client)
     GenStage.ask(s.subscription, 1)
     s.producer.ack(s.message)
-    {:reply, :ok, [], %{s | message: nil}}
+    {:reply, :ok, [], %{s | message: nil, build: nil}}
   end
 
   def handle_info(:timeout, s) do

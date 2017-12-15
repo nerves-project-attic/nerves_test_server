@@ -141,6 +141,11 @@ defmodule NervesTestServer.Device do
     {:noreply, [], %{s | build: nil, message: nil}}
   end
 
+  def handle_events([], _from, s) do
+    Process.sleep(10_000)
+    GenStage.ask(s.subscription, 1)
+    {:noreply, [], s}
+  end
   def handle_events([message], _from, s) do
     {:noreply, [], process_message(message, s)}
   end

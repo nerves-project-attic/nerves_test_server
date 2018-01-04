@@ -59,3 +59,6 @@ config :nerves_test_server, NervesTestServer.Repo,
 
 config :nerves_test_server,
   producer: NervesTestServer.Producers.Local
+
+config :tentacat, 
+  enabled: false

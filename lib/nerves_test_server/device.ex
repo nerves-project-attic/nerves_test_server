@@ -62,7 +62,7 @@ defmodule NervesTestServer.Device do
     {:reply, :ok, [], %{s | build: build}}
   end
 
-  def handle_call({:test_result, result}, _from, %{build: nil} = s) do
+  def handle_call({:test_result, _result}, _from, %{build: nil} = s) do
     {:reply, :ok, [], s}
   end
   def handle_call({:test_result, result}, _from, s) do
@@ -104,9 +104,18 @@ defmodule NervesTestServer.Device do
       #{build_url}
       """}, 
       client)
-    GenStage.ask(s.subscription, 1)
+    send(self(), :ask)
     s.producer.ack(s.message)
     {:reply, :ok, [], %{s | message: nil, build: nil}}
+  end
+
+  def handle_events([], _from, s) do
+    Process.sleep(10_000)
+    send(self(), :ask)
+    {:noreply, [], s}
+  end
+  def handle_events([message], _from, s) do
+    {:noreply, [], process_message(message, s)}
   end
 
   def handle_info(:timeout, s) do
@@ -119,39 +128,16 @@ defmodule NervesTestServer.Device do
     Build.changeset(s.build, change)
     |> Repo.update!
     
-    build_url = 
-    NervesTestServerWeb.Router.Helpers.build_url(
-      NervesTestServerWeb.Endpoint, 
-      :show, 
-      s.build.org, 
-      s.build.system,
-      s.build.id)
-    
-    token = Application.get_env(:tentacat, :token)
-    client = Tentacat.Client.new(%{access_token: token})
-    Tentacat.Commits.Comments.create(
-      s.build.org, 
-      s.build.system, 
-      s.build.vcs_id, 
-      %{body: """
-      Nerves Hardware Test
-      Status: Timed Out
-
-      #{build_url}
-      """}, 
-      client)
-    GenStage.ask(s.subscription, 1)
+    post_vcs_status(s.build)
     s.producer.ack(s.message)
+    send(self(), :ask)
+
     {:noreply, [], %{s | build: nil, message: nil}}
   end
 
-  def handle_events([], _from, s) do
-    Process.sleep(10_000)
+  def handle_info(:ask,  s) do
     GenStage.ask(s.subscription, 1)
     {:noreply, [], s}
-  end
-  def handle_events([message], _from, s) do
-    {:noreply, [], process_message(message, s)}
   end
 
   defp process_message(message, s) do
@@ -200,5 +186,35 @@ defmodule NervesTestServer.Device do
       }
     Repo.insert!(build)
   end
+
+  defp post_vcs_status(%Build{} = build) do
+    Application.get_env(:tentacat, :enabled)
+    |> post_vcs_github(build)
+  end
+
+  defp post_vcs_github(false, _), do: :noop
+  defp post_vcs_github(true, %Build{} = build) do
+    token = Application.get_env(:tentacat, :token)
+    client = Tentacat.Client.new(%{access_token: token})
+    build_url = 
+    NervesTestServerWeb.Router.Helpers.build_url(
+      NervesTestServerWeb.Endpoint, 
+      :show, 
+      build.org, 
+      build.system,
+      build.id)
+    Tentacat.Commits.Comments.create(
+      build.org, 
+      build.system, 
+      build.vcs_id, 
+      %{body: """
+      Nerves Hardware Test
+      Status: Timed Out
+
+      #{build_url}
+      """}, 
+      client)
+  end
+  
 
 end

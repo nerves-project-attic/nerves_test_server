@@ -14,8 +14,7 @@ config :nerves_test_server, NervesTestServerWeb.Endpoint,
   url: [host: "169.254.37.89"],
   secret_key_base: "38LtmKGJZBrYawg1qVj6dhQt6yCu2IsMOCy1pFp3XQiGFUBOXSOAUB5lqKeFmzAv",
   render_errors: [view: NervesTestServerWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: NervesTestServer.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: NervesTestServer.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -31,9 +30,9 @@ config :circle_ci,
   token: System.get_env("NERVES_CIRCLECI_TOKEN"),
   json_module: Poison
 
-config :tentacat, 
+config :tentacat,
   token: System.get_env("NERVES_GITHUB_TOKEN")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

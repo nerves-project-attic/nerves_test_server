@@ -6,14 +6,14 @@ defmodule NervesTestServer.Build do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "builds" do
-    field :vcs_id, :string
-    field :org, :string
-    field :system, :string
-    field :device, :string
-    field :result, :map
-    field :result_io, :string
-    field :start_time, :utc_datetime
-    field :end_time, :utc_datetime
+    field(:vcs_id, :string)
+    field(:org, :string)
+    field(:system, :string)
+    field(:device, :string)
+    field(:result, :map)
+    field(:result_io, :string)
+    field(:start_time, :utc_datetime)
+    field(:end_time, :utc_datetime)
 
     timestamps()
   end

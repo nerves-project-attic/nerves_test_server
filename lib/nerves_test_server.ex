@@ -1,3 +1,2 @@
 defmodule NervesTestServer do
-  
 end

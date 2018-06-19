@@ -4,5 +4,4 @@ defmodule NervesTestServerWeb.PageController do
   def index(conn, _params) do
     redirect(conn, to: "/nerves-project/")
   end
-
 end

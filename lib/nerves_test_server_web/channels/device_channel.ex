@@ -8,12 +8,14 @@ defmodule NervesTestServerWeb.DeviceChannel do
   def join("device:" <> device, payload, socket) do
     system = Map.get(payload, "system")
     status = Map.get(payload, "status")
-    Logger.debug """
+
+    Logger.debug("""
       Joined
       Device: #{device}
       System: #{system}
-    """
-    #Logger.debug "Params: #{inspect payload}"
+    """)
+
+    # Logger.debug "Params: #{inspect payload}"
     if status == "ready" do
       connect(device, "device:" <> device, system)
     end
@@ -22,11 +24,12 @@ defmodule NervesTestServerWeb.DeviceChannel do
       socket
       |> assign(:device, device)
       |> assign(:system, system)
+
     {:ok, socket}
   end
 
   def handle_in("test_begin", _payload, socket) do
-    #TODO: Unlink from the device genserver and set the timers
+    # TODO: Unlink from the device genserver and set the timers
     device = socket.assigns[:device]
     Device.test_begin(pname(device))
     {:reply, {:ok, %{"test" => "begin"}}, socket}
@@ -37,13 +40,15 @@ defmodule NervesTestServerWeb.DeviceChannel do
     system = socket.assigns[:system]
     result_payload = Map.take(payload, ["test_results", "test_io"])
     result = Map.get(result_payload, "test_results")
-    Logger.debug "Payload: #{inspect payload}"
-    Logger.debug """
+    Logger.debug("Payload: #{inspect(payload)}")
+
+    Logger.debug("""
       Test Results
       Device: #{device}
       System: #{system}
-      Result: #{inspect result}
-    """
+      Result: #{inspect(result)}
+    """)
+
     if pid = Process.whereis(pname(device)) do
       Device.test_result(pid, result_payload)
     else
@@ -55,20 +60,23 @@ defmodule NervesTestServerWeb.DeviceChannel do
 
   def connect(device, topic, system) do
     pidname = pname(device)
+
     if pid = Process.whereis(pidname) do
       {:ok, pid}
     else
       NervesTestServer.Device.start_link(
-        device, 
-        system, 
+        device,
+        system,
         topic,
-        @producer, 
-        [name: pidname])
+        @producer,
+        name: pidname
+      )
     end
   end
 
   def remove(device) do
     pidname = pname(device)
+
     if Process.whereis(pidname) do
       Process.exit(pidname, :normal)
     else
@@ -79,5 +87,4 @@ defmodule NervesTestServerWeb.DeviceChannel do
   defp pname(device) do
     String.to_atom("NervesTestServer.Device." <> device)
   end
-
 end

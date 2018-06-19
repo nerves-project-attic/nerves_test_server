@@ -32,10 +32,9 @@ config :nerves_test_server, NervesTestServer.Repo,
 config :nerves_test_server,
   producer: NervesTestServer.Producers.SQS
 
-config :nerves_test_server, NervesTestServer.Producers.SQS,
-  queue_name: "nerves-test-server"
+config :nerves_test_server, NervesTestServer.Producers.SQS, queue_name: "nerves-test-server"
 
-config :tentacat, 
+config :tentacat,
   enabled: true
 
 # ## SSL Support

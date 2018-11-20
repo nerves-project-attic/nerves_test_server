@@ -14,13 +14,9 @@ defmodule NervesTestServerWeb.Router do
   end
 
   scope "/", NervesTestServerWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
-
-    get "/:org", BuildController, :org_index
-    get "/:org/:repo", BuildController, :repo_index
-    get "/:org/:repo/:build", BuildController, :show
   end
 
   # Other scopes may use custom stacks.

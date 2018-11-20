@@ -2,12 +2,7 @@ defmodule NervesTestServerWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "device:*", NervesTestServerWeb.DeviceChannel
-
-  ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket,
-    timeout: 45_000
-  # transport :longpoll, Phoenix.Transports.LongPoll
+  # channel "room:*", NervesTestServerWeb.RoomChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -20,7 +15,7 @@ defmodule NervesTestServerWeb.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(_params, socket) do
+  def connect(_params, socket, _connect_info) do
     {:ok, socket}
   end
 

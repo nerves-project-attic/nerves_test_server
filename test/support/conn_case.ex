@@ -5,7 +5,7 @@ defmodule NervesTestServerWeb.ConnCase do
 
   Such tests rely on `Phoenix.ConnTest` and also
   import other functionality to make it easier
-  to build common datastructures and query the data layer.
+  to build common data structures and query the data layer.
 
   Finally, if the test case interacts with the database,
   it cannot be async. For this reason, every test runs
@@ -19,20 +19,14 @@ defmodule NervesTestServerWeb.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import NervesTestServerWeb.Router.Helpers
+      alias NervesTestServerWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint NervesTestServerWeb.Endpoint
     end
   end
 
-
-  setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(NervesTestServer.Repo)
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(NervesTestServer.Repo, {:shared, self()})
-    end
+  setup _tags do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
-
 end

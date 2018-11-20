@@ -1,14 +1,18 @@
 defmodule NervesTestServerWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :nerves_test_server
 
-  socket "/socket", NervesTestServerWeb.UserSocket
+  socket "/socket", NervesTestServerWeb.UserSocket,
+    websocket: [timeout: 45_000],
+    longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #
-  # You should set gzip to true if you are running phoenix.digest
+  # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
   plug Plug.Static,
-    at: "/", from: :nerves_test_server, gzip: false,
+    at: "/",
+    from: :nerves_test_server,
+    gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
   # Code reloading can be explicitly enabled under the
@@ -25,7 +29,7 @@ defmodule NervesTestServerWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Poison
+    json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride
   plug Plug.Head
@@ -36,13 +40,12 @@ defmodule NervesTestServerWeb.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_nerves_test_server_key",
-    signing_salt: "H/py7JuK"
+    signing_salt: "KskwSnyz"
 
   plug NervesTestServerWeb.Router
 
   @doc """
   Callback invoked for dynamically configuring the endpoint.
-
   It receives the endpoint configuration and checks if
   configuration should be loaded from the system environment.
   """

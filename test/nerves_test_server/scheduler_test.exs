@@ -16,6 +16,12 @@ defmodule NervesTestServer.SchedulerTest do
         assert test in Scheduler.scheduled_tests(tag)
       end)
     end)
+
+    Enum.each(ctx.tags, fn(tag) ->
+      Enum.each(tag_tests[tag], fn(test) ->
+        assert test not in Scheduler.cancel_test(tag, test)
+      end)
+    end)
   end
 
 end

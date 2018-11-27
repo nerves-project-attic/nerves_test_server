@@ -10,12 +10,16 @@ defmodule NervesTestServer.Test do
     GenServer.start_link(__MODULE__, ctx)
   end
 
+  def stop(pid) do
+    GenServer.stop(pid)
+  end
+
   def init(ctx) do
     {:ok, ctx, {:continue, nil}}
   end
 
-  def handle_continue(nil, state) do
-    {:noreply, state}
+  def handle_continue(nil, ctx) do
+    {:noreply, ctx}
   end
 
   # defp set_github_status(state, context) do

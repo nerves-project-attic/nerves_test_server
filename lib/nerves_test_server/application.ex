@@ -9,9 +9,8 @@ defmodule NervesTestServer.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      NervesTestServerWeb.Endpoint
-      # Starts a worker by calling: NervesTestServer.Worker.start_link(arg)
-      # {NervesTestServer.Worker, arg},
+      NervesTestServerWeb.Endpoint,
+      NervesTestServer.Scheduler
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

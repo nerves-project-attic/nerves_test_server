@@ -1,0 +1,19 @@
+{
+  "meta-product": "test",
+  "meta-version": "0.1.0",
+  "meta-author": "The Nerves Team",
+  "meta-platform": "rpi3",
+  "meta-architecture": "arm",
+  "meta-creation-date": "2018-11-26T16:02:22Z",
+  "meta-vcs-identifier": "45c3cea99267c3aa2e31aac34e5675d14e3ca502",
+  "meta-uuid": "7102afb4-5c6b-5f9f-880d-989292c8fc34",
+  "repo_sha": "45c3cea99267c3aa2e31aac34e5675d14e3ca502",
+  "repo_name": "nerves_system_rpi3",
+  "repo_org": "nerves-project",
+  "repo_branch": "nerves-hub",
+  "repo_pr": "https://github.com/nerves-project/nerves_system_rpi3/pull/81",
+  "tags": ["rpi3", "rpi3b+"],
+  "ci": "circleci",
+  "ci_build_number": "761",
+  "ci_build_url": "https://circleci.com/gh/nerves-project/nerves_system_rpi3/761"
+}

@@ -1,0 +1,11 @@
+{
+  "Type" : "Notification",
+  "MessageId" : "d2a48054-c925-5df2-a448-d422d2599029",
+  "TopicArn" : "arn:aws:sns:us-east-1:991424406598:nerves-test-firmware",
+  "Message" : "{\n  \"meta-product\": \"test\",\n  \"meta-version\": \"0.1.0\",\n  \"meta-author\": \"The Nerves Team\",\n  \"meta-platform\": \"rpi3\",\n  \"meta-architecture\": \"arm\",\n  \"meta-creation-date\": \"2018-11-26T16:02:22Z\",\n  \"meta-vcs-identifier\": \"45c3cea99267c3aa2e31aac34e5675d14e3ca502\",\n  \"meta-uuid\": \"7102afb4-5c6b-5f9f-880d-989292c8fc34\",\n  \"repo_sha\": \"45c3cea99267c3aa2e31aac34e5675d14e3ca502\",\n  \"repo_name\": \"nerves_system_rpi3\",\n  \"repo_org\": \"nerves-project\",\n  \"repo_branch\": \"nerves-hub\",\n  \"repo_pr\": null,\n  \"ci\": \"circleci\",\n  \"ci_build_number\": \"761\",\n  \"ci_build_url\": \"https://circleci.com/gh/nerves-project/nerves_system_rpi3/761\"\n}",
+  "Timestamp" : "2018-11-26T16:03:08.018Z",
+  "SignatureVersion" : "1",
+  "Signature" : "b8Ccw1I0gYR8MsRm7/ENMH+RKoQ0OzkfmMVVL4IFk17HyUTXZaSVuodSpakwT/sMiqXscU+3l1trYbdK7lT4MH07idqZ2NHzh+EEV5R80wUCL46N7MgPameh2Q/wVXxVwFga3vrDv0Vhv1SPpYplPbRSKp/kux1rSCOJvJBmPG3F2PW2zHBj+ZzPNZ6SrMQ7EzXXmJ/gGzP3izM6z1FvHfDygJMthLlAzbxHsD6N8+EaOOmGPR9cqky1NT86P0K1A9uNUEFPRamfMg8u49riawZie2F4+KW8rFvoNou1+xbk5Ak1Jna6+SzKT/dqu43A2e45we4LSJkooC9MAxkgKw==",
+  "SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem",
+  "UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:991424406598:nerves-test-firmware:18725b2b-5e07-4e77-a5ed-cff9c66c9089"
+}

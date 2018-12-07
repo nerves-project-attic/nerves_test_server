@@ -2,24 +2,39 @@ defmodule NervesTestServer.Test do
   @moduledoc """
 
   """
+
+  defstruct [
+    pid: nil,
+    tag: nil,
+    timeout_ref: nil,
+    status: :pending,
+    device: nil,
+    context: nil
+  ]
+
   use GenServer
 
-  alias NervesTestServer.Test.Context
+  @timeout 1000 * 60 * 20 # 20 minutes
 
-  def start_link(%Context{} = ctx) do
-    GenServer.start_link(__MODULE__, ctx)
+  def start_link(tag, context) do
+    GenServer.start_link(__MODULE__, {tag, context})
   end
 
   def stop(pid) do
     GenServer.stop(pid)
   end
 
-  def init(ctx) do
-    {:ok, ctx, {:continue, nil}}
+  def init({tag, context}) do
+    {:ok, %__MODULE__{
+      pid: self(),
+      tag: tag,
+      context: context,
+      timeout_ref: :timer.exit_after(@timeout, :normal)
+    }, {:continue, nil}}
   end
 
-  def handle_continue(nil, ctx) do
-    {:noreply, ctx}
+  def handle_continue(nil, context) do
+    {:noreply, context}
   end
 
   # defp set_github_status(state, context) do

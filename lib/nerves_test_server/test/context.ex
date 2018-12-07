@@ -11,12 +11,12 @@ defmodule NervesTestServer.Test.Context do
     repo_pr: nil
   ]
 
-  def new(context) when is_binary(context) do
+  def parse(context) when is_binary(context) do
     context
     |> Jason.decode!()
-    |> new()
+    |> parse()
   end
-  def new(context) when is_map(context) do
+  def parse(context) when is_map(context) do
     %__MODULE__{
       uuid: get!(context, "meta-uuid"),
       platform: get!(context, "meta-platform"),
@@ -33,5 +33,4 @@ defmodule NervesTestServer.Test.Context do
   defp get!(values, key) do
     values[key] || raise "#{key} missing"
   end
-
 end
